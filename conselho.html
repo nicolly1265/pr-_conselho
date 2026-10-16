@@ -168,6 +168,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.55}
 .q{margin-bottom:14px}
 .q label{text-transform:none;letter-spacing:0;font-size:.87rem;color:#25353d;font-weight:600;margin-bottom:6px}
 .linha{display:grid;grid-template-columns:230px 1fr auto;gap:8px;margin-bottom:8px;align-items:start}
+.dupla-turma{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .assin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:26px;padding-top:16px;border-top:1px dashed var(--linha)}
 .assin{border-top:1.5px solid #55686f;padding-top:6px;font-size:.76rem;color:var(--cinza);text-align:center;min-height:52px}
 .assin b{display:block;color:#25353d;font-size:.85rem;margin-bottom:2px}
@@ -240,6 +241,7 @@ textarea.input{resize:vertical;min-height:80px;line-height:1.55}
 <div id="print-area"></div>
 
 <script>
+
 /* =========================================================================
    PRÉ-CONSELHO DE CLASSE — E.E.C. FREI GRACIANO DROESSLER
    Aplicação de página única. Dados persistidos em localStorage.
@@ -249,6 +251,7 @@ const DB_KEY  = 'preconselho_db_v1';
 const SES_KEY = 'preconselho_sessao_v1';
 
 const ACESSOS = {
+  'prof_0123'   : { role:'professor', label:'Professor(a)',            nome:'Professor(a)' },
   'adm_1750'    : { role:'admin',   label:'Administração / Pedagogia', nome:'Administração' },
   'diretor_1409': { role:'diretor', label:'Direção',                   nome:'Direção Escolar' },
   'aluno_2404'  : { role:'aluno',   label:'Estudante',                 nome:'Estudante' },
@@ -256,6 +259,14 @@ const ACESSOS = {
 };
 
 const NAV = {
+  professor: [
+    ['painel','📊','Meu Painel'],
+    ['fichas','📝','Minhas Fichas'],
+    ['ficha','➕','Nova Ficha'],
+    ['conselho','🏫','Conselho de Classe'],
+    ['relatorios','📈','Meus Relatórios'],
+    ['recados','💬','Comunicados']
+  ],
   admin: [
     ['painel','📊','Painel Geral'],
     ['fichas','📝','Fichas Individuais'],
@@ -321,11 +332,21 @@ function toast(msg, err){
 }
 
 /* ---------------- banco de dados ---------------- */
+/* Turma do 9º ano — completam a rede do 6º ao 9º ano. */
+const TURMA9 = { id:'t4', serie:'9', letra:'A', nome:'9º Ano A', turno:'Tempo Integral', sala:'Sala 04', prof:'Profª. Cleide Hoffmann' };
+const ALUNOS9 = [
+  {id:'a11', nome:'Isabela Moreira', turmaId:'t4', responsavel:'Patrícia Moreira', contato:'(47) 98811-2233', freq:95},
+  {id:'a12', nome:'Rafael Antunes',  turmaId:'t4', responsavel:'Jorge Antunes',    contato:'(47) 98722-4455', freq:87},
+  {id:'a13', nome:'Camila Ferreira', turmaId:'t4', responsavel:'Denise Ferreira',  contato:'(47) 98633-6677', freq:100},
+  {id:'a14', nome:'Bruno Cardoso',   turmaId:'t4', responsavel:'Marta Cardoso',    contato:'(47) 98544-8899', freq:79}
+];
+
 function seed(){
   const t = [
-    {id:'t1', nome:'6º Ano A', turno:'Tempo Integral', sala:'Sala 01', prof:'Profª. Marlene Kruger'},
-    {id:'t2', nome:'7º Ano A', turno:'Tempo Integral', sala:'Sala 02', prof:'Prof. Aírton Becker'},
-    {id:'t3', nome:'8º Ano A', turno:'Tempo Integral', sala:'Sala 03', prof:'Profª. Cleide Hoffmann'}
+    {id:'t1', serie:'6', letra:'A', nome:'6º Ano A', turno:'Tempo Integral', sala:'Sala 01', prof:'Profª. Marlene Kruger'},
+    {id:'t2', serie:'7', letra:'A', nome:'7º Ano A', turno:'Tempo Integral', sala:'Sala 02', prof:'Prof. Aírton Becker'},
+    {id:'t3', serie:'8', letra:'A', nome:'8º Ano A', turno:'Tempo Integral', sala:'Sala 03', prof:'Profª. Cleide Hoffmann'},
+    TURMA9
   ];
   const a = [
     {id:'a1', nome:'Maria Eduarda Ribeiro', turmaId:'t1', responsavel:'Ana Paula Ribeiro', contato:'(47) 99911-2233', freq:96},
@@ -337,12 +358,13 @@ function seed(){
     {id:'a7', nome:'Sofia Martins',          turmaId:'t2', responsavel:'Paulo Martins',     contato:'(47) 99377-3344', freq:98},
     {id:'a8', nome:'Pedro Henrique Costa',   turmaId:'t3', responsavel:'Cláudia Costa',     contato:'(47) 99288-5566', freq:90},
     {id:'a9', nome:'Laura Beatriz Nunes',    turmaId:'t3', responsavel:'Eduardo Nunes',     contato:'(47) 99199-7788', freq:100},
-    {id:'a10',nome:'Gabriel Rocha',          turmaId:'t3', responsavel:'Simone Rocha',      contato:'(47) 99010-9900', freq:76}
+    {id:'a10',nome:'Gabriel Rocha',          turmaId:'t3', responsavel:'Simone Rocha',      contato:'(47) 99010-9900', freq:76},
+    ALUNOS9[0], ALUNOS9[1], ALUNOS9[2], ALUNOS9[3]
   ];
   const f = [
     {
       id:'f1', turmaId:'t1', professor:'Profª. Marlene Kruger', componente:'Língua Portuguesa',
-      data: hoje(), status:'enviada', classe:'6º Ano A',
+      data: hoje(), status:'enviada',
       panorama:'A turma apresenta desenvolvimento satisfatório em leitura e interpretação textual. A maioria acompanha as propostas, mas ainda demonstra insegurança na produção escrita autoral e no uso das regras ortográficas.',
       participacao:'A participação é boa nas atividades coletivas e nos projetos do tempo integral. Nas tarefas individuais, um grupo pequeno se dispersa e necessita de mediação constante do professor.',
       dificuldades:'Produção textual (coesão e coerência), uso de pontuação e interpretação de problemas matemáticos com enunciados longos.',
@@ -362,7 +384,7 @@ function seed(){
     },
     {
       id:'f2', turmaId:'t2', professor:'Prof. Aírton Becker', componente:'Matemática',
-      data: hoje(), status:'rascunho', classe:'7º Ano A',
+      data: hoje(), status:'rascunho',
       panorama:'Turma heterogênea, com um grupo avançado que conclui as tarefas rapidamente e outro que ainda não consolidou as quatro operações com números racionais.',
       participacao:'Participação ativa nas discussões, porém com conversas paralelas frequentes. É necessário reforçar combinados de convivência.',
       dificuldades:'Operações com frações, números decimais e resolução de problemas com proporcionalidade.',
@@ -393,7 +415,8 @@ function seed(){
       etapa:'Ensino Fundamental em Tempo Integral',
       anoLetivo: new Date().getFullYear(),
       acessoAlunoId:'a1',
-      acessoPaiAlunoId:'a1'
+      acessoPaiAlunoId:'a1',
+      migracao9: true
     },
     turmas:t, alunos:a, fichas:f, conselhos:c, recados:r
   };
@@ -401,11 +424,45 @@ function seed(){
 function load(){
   try{
     const raw = lsGet(DB_KEY);
-    if(raw){ const d = JSON.parse(raw); if(d && d.fichas) return d; }
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d && d.fichas){
+        if(migrar(d)) lsSet(DB_KEY, JSON.stringify(d));
+        return d;
+      }
+    }
   }catch(e){}
   const d = seed();
   lsSet(DB_KEY, JSON.stringify(d));
   return d;
+}
+
+/* Ajusta bancos já existentes: garante que a rede de turmas vá até o 9º ano.
+   Roda uma única vez por banco (marca config.migracao9). */
+function migrar(d){
+  if(!d || !Array.isArray(d.turmas) || !Array.isArray(d.alunos)) return false;
+  let mudou = false;
+  d.config = d.config || {};
+  /* Deriva série e letra a partir do nome das turmas que já existem. */
+  d.turmas.forEach(t => {
+    if(t.serie && t.letra) return;
+    const m = String(t.nome || '').match(/(\d+)\s*[ºo°ª]?\s*(?:ano|s[eé]rie)?\s*([A-Da-d])?/i);
+    t.serie = (m && m[1]) ? String(m[1]) : (t.serie || '6');
+    t.letra = (m && m[2]) ? String(m[2]).toUpperCase() : (t.letra || 'A');
+    t.nome = nomeTurmaDe(t.serie, t.letra);
+    mudou = true;
+  });
+  if(d.config.migracao9) return mudou;
+  d.config.migracao9 = true;
+  const jaTem9 = d.turmas.some(t => String(t.serie) === '9');
+  if(jaTem9) return true;
+  const idT = d.turmas.some(t => t.id === TURMA9.id) ? uid('t') : TURMA9.id;
+  d.turmas.push(Object.assign({}, TURMA9, { id: idT }));
+  ALUNOS9.forEach(a => {
+    const idA = d.alunos.some(x => x.id === a.id) ? uid('a') : a.id;
+    d.alunos.push(Object.assign({}, a, { id: idA, turmaId: idT }));
+  });
+  return true;
 }
 function save(){
   if(!lsSet(DB_KEY, JSON.stringify(db))) toast('Não foi possível salvar localmente.', true);
@@ -438,12 +495,15 @@ function renderLogin(erro){
       '<form id="form-login" autocomplete="off">' +
         '<label for="codigo">Código de acesso</label>' +
         '<input class="input" id="codigo" type="password" placeholder="Digite seu código" autofocus>' +
-        '<p class="tiny-txt muted" style="margin:8px 0 16px">O código define automaticamente o seu perfil de acesso.</p>' +
+        '<p class="tiny-txt muted" style="margin:8px 0 14px">O código define automaticamente o seu perfil de acesso.</p>' +
+        '<label for="nome-prof">Nome do professor(a) <span class="muted" style="font-weight:600;text-transform:none;letter-spacing:0">— opcional</span></label>' +
+        '<input class="input" id="nome-prof" placeholder="Preencha apenas se você for professor(a)" style="margin-bottom:16px">' +
         '<button class="btn full" type="submit">Entrar no sistema</button>' +
       '</form>' +
       '<div class="perfis-lista">' +
         '<div class="perfil-chip"><b>Administração</b>Gestão e pedagogia</div>' +
         '<div class="perfil-chip"><b>Direção</b>Gestão escolar</div>' +
+        '<div class="perfil-chip"><b>Professor(a)</b>Preencher fichas</div>' +
         '<div class="perfil-chip"><b>Estudante</b>Acompanhamento</div>' +
         '<div class="perfil-chip"><b>Família</b>Responsável</div>' +
       '</div>' +
@@ -454,10 +514,16 @@ function renderLogin(erro){
     const c = norm($('#codigo').value);
     const chave = Object.keys(ACESSOS).find(k => norm(k) === c);
     if(!chave){ renderLogin('Código de acesso inválido. Verifique e tente novamente.'); return; }
-    sessao = Object.assign({ codigo: chave, entrouEm: new Date().toISOString() }, ACESSOS[chave]);
+    const info = ACESSOS[chave];
+    let nome = info.nome;
+    if(info.role === 'professor'){
+      const np = $('#nome-prof') ? $('#nome-prof').value.trim() : '';
+      if(np) nome = np;
+    }
+    sessao = { codigo: chave, entrouEm: new Date().toISOString(), role: info.role, label: info.label, nome: nome };
     lsSet(SES_KEY, JSON.stringify(sessao));
     ROTA = 'painel';
-    toast('Bem-vindo(a), ' + sessao.label + '!');
+    toast('Bem-vindo(a), ' + nome + '!');
     render();
   });
 }
@@ -538,6 +604,9 @@ function topActions(){
   if(sessao.role === 'admin' || sessao.role === 'diretor'){
     b.push('<button class="btn sm ghost" onclick="imprimirRelatorioGeral()">🖨 Imprimir visão geral</button>');
     b.push('<button class="btn sm" onclick="novaFicha()">➕ Nova ficha</button>');
+  } else if(sessao.role === 'professor'){
+    b.push('<button class="btn sm ghost" onclick="navegar(\'relatorios\')">📈 Meus relatórios</button>');
+    b.push('<button class="btn sm" onclick="novaFicha()">➕ Nova ficha</button>');
   } else {
     b.push('<button class="btn sm ghost" onclick="window.print()">🖨 Imprimir</button>');
   }
@@ -572,8 +641,78 @@ function barra(pct, cls){
   return '<div class="barra ' + (cls||'') + '"><i style="width:' + p + '%"></i></div>';
 }
 function optsTurmas(sel){
-  return db.turmas.map(t => '<option value="' + t.id + '"' + (t.id===sel?' selected':'') + '>' + esc(t.nome) + '</option>').join('');
+  return db.turmas.slice().sort((a,b) => String(a.nome).localeCompare(String(b.nome)))
+    .map(t => '<option value="' + t.id + '"' + (t.id===sel?' selected':'') + '>' + esc(t.nome) + '</option>').join('');
 }
+
+/* ---------- Série (6,7,8,9) + Turma (A,B,C,D) ---------- */
+const SERIES = ['6','7','8','9'];
+const LETRAS = ['A','B','C','D'];
+function nomeTurmaDe(serie, letra){ return String(serie) + 'º Ano ' + String(letra); }
+function acharTurma(serie, letra){
+  return db.turmas.find(t => String(t.serie) === String(serie) && String(t.letra) === String(letra));
+}
+function todasSeries(){
+  const s = {}; SERIES.forEach(x => s[x] = 1);
+  db.turmas.forEach(t => { if(t.serie) s[String(t.serie)] = 1; });
+  return Object.keys(s).sort((a,b) => Number(a) - Number(b));
+}
+function todasLetras(serie){
+  const s = {}; LETRAS.forEach(x => s[x] = 1);
+  db.turmas.forEach(t => { if(t.letra && String(t.serie) === String(serie)) s[String(t.letra)] = 1; });
+  return Object.keys(s).sort();
+}
+function optsSeries(sel, vazio){
+  return (vazio ? '<option value="">' + esc(vazio) + '</option>' : '') +
+    todasSeries().map(s => '<option value="' + s + '"' + (String(sel)===s?' selected':'') + '>' + s + 'º Ano</option>').join('');
+}
+function optsLetras(serie, sel, vazio){
+  if(!serie) return vazio ? '<option value="">' + esc(vazio) + '</option>' : '';
+  return (vazio ? '<option value="">' + esc(vazio) + '</option>' : '') +
+    todasLetras(serie).map(l => '<option value="' + l + '"' + (String(sel)===l?' selected':'') + '>Turma ' + l + '</option>').join('');
+}
+/* Cria a turma na hora, se a combinação série+letra ainda não existir. */
+function criarTurmaSe(serie, letra){
+  let t = acharTurma(serie, letra);
+  if(t) return t;
+  const n = Math.max(1, todasSeries().indexOf(String(serie)) * 4 + LETRAS.indexOf(String(letra)) + 1);
+  t = { id: uid('t'), serie:String(serie), letra:String(letra), nome:nomeTurmaDe(serie, letra),
+        turno:'Tempo Integral', sala:'Sala ' + String(n).padStart(2,'0'), prof:'' };
+  db.turmas.push(t);
+  save();
+  toast('Turma ' + t.nome + ' criada automaticamente.');
+  return t;
+}
+/* Widget de dois campos que grava a turma escolhida num campo oculto. */
+function seletorTurma(turmaId, idCampo, nameCampo, vazio){
+  const t = turmaId ? turma(turmaId) : null;
+  const serie = t ? String(t.serie || '') : '';
+  const letra = t ? String(t.letra || '') : '';
+  return '<div class="dupla-turma" data-vazio="' + esc(vazio || '') + '">' +
+      '<select class="input sel-serie" onchange="trocarSerie(this)">' + optsSeries(serie, vazio) + '</select>' +
+      '<select class="input sel-letra" onchange="trocarLetra(this)">' + optsLetras(serie, letra, vazio) + '</select>' +
+      '<input type="hidden" class="sel-id"' + (idCampo ? ' id="' + idCampo + '"' : '') +
+        (nameCampo ? ' name="' + nameCampo + '"' : '') + ' value="' + esc(turmaId || '') + '">' +
+    '</div>';
+}
+function _syncTurma(box, mudouSerie){
+  if(!box) return;
+  const selSerie = box.querySelector('.sel-serie');
+  const selLetra = box.querySelector('.sel-letra');
+  const hid = box.querySelector('.sel-id');
+  const vazio = box.getAttribute('data-vazio') || '';
+  const serie = selSerie.value;
+  if(mudouSerie){
+    const atual = turma(hid.value);
+    const letraAtual = (atual && String(atual.serie) === String(serie)) ? String(atual.letra) : '';
+    selLetra.innerHTML = optsLetras(serie, letraAtual, vazio);
+  }
+  const letra = selLetra.value;
+  if(!serie || !letra){ hid.value = ''; return; }
+  hid.value = criarTurmaSe(serie, letra).id;
+}
+function trocarSerie(el){ _syncTurma(el.closest('.dupla-turma'), true); }
+function trocarLetra(el){ _syncTurma(el.closest('.dupla-turma'), false); }
 function optsAlunos(sel){
   return db.turmas.map(t => {
     const as = alunosDaTurma(t.id);
@@ -583,6 +722,24 @@ function optsAlunos(sel){
   }).join('');
 }
 function fichasDaTurma(id){ return db.fichas.filter(f => f.turmaId === id); }
+
+/* ---- professor(a) ---- */
+function souProfessor(){ return !!(sessao && sessao.role === 'professor'); }
+/* nome informado no login — vazio quando o professor entrou sem se identificar */
+function nomeProfessorSessao(){
+  if(!souProfessor()) return '';
+  const n = String(sessao.nome || '').trim();
+  return norm(n) === norm('Professor(a)') ? '' : n;
+}
+function fichasDoProfessor(){
+  if(!souProfessor()) return db.fichas.slice();
+  const n = norm(sessao.nome);
+  if(!n || n === norm('Professor(a)')) return db.fichas.slice();
+  return db.fichas.filter(f => norm(f.professor) === n);
+}
+/* o que o usuário logado pode ver nas listas e relatórios */
+function fichasVisiveis(){ return souProfessor() ? fichasDoProfessor() : db.fichas; }
+function fichasDaTurmaVisiveis(id){ return fichasVisiveis().filter(f => f.turmaId === id); }
 function registrosDoAluno(alunoId){
   const out = [];
   db.fichas.forEach(f => {
@@ -598,7 +755,59 @@ function percentual(valor, total){ return total ? Math.round(valor/total*100) : 
    ========================================================================= */
 function vPainel(){
   if(sessao.role === 'aluno' || sessao.role === 'pais') return vPainelFamilia();
+  if(sessao.role === 'professor') return vPainelProfessor();
   return vPainelGestao();
+}
+
+function vPainelProfessor(){
+  const minhas = fichasDoProfessor().slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const rascunhos = minhas.filter(f => f.status === 'rascunho').length;
+  const enviadas  = minhas.filter(f => f.status === 'enviada').length;
+  const validadas = minhas.filter(f => f.status === 'validada').length;
+  const at  = minhas.reduce((s,f) => s + (f.atencao||[]).length, 0);
+  const pos = minhas.reduce((s,f) => s + (f.destaques||[]).length, 0);
+  const ids = {}; minhas.forEach(f => ids[f.turmaId] = true);
+  const turmasTrabalhadas = Object.keys(ids).length;
+  const recs = db.recados.filter(r => r.para === 'todos').slice(-3).reverse();
+
+  const linhas = minhas.length ? minhas.map(f =>
+    '<tr><td><b>' + esc(turmaNome(f.turmaId)) + '</b></td>' +
+    '<td>' + esc(f.componente || '—') + '</td>' +
+    '<td>' + fmtData(f.data) + '</td>' +
+    '<td>' + (f.destaques||[]).length + '</td>' +
+    '<td>' + ((f.atencao||[]).length ? '<span class="badge b-vermelho">' + f.atencao.length + '</span>' : '<span class="badge b-verde">0</span>') + '</td>' +
+    '<td>' + badgeStatus(f.status) + '</td>' +
+    '<td><div class="acoes">' +
+      '<button class="btn tiny ghost" onclick="editarFicha(\'' + f.id + '\')">Continuar</button>' +
+      '<button class="btn tiny ghost" onclick="imprimirFicha(\'' + f.id + '\')">🖨</button>' +
+      '<button class="btn tiny danger" onclick="excluirFicha(\'' + f.id + '\')">Excluir</button>' +
+    '</div></td></tr>').join('')
+    : '<tr><td colspan="7"><div class="empty"><span class="ic">📝</span>Você ainda não preencheu nenhuma ficha.<br><span class="small muted">Clique em <b>Nova Ficha</b> para começar.</span></div></td></tr>';
+
+  return '<div class="card" style="margin-bottom:18px">' +
+      '<div class="card-head"><div><h2 style="margin:0">Olá, ' + esc(sessao.nome) + '!</h2>' +
+      '<div class="small muted">Preencha a ficha individual da sua turma antes do conselho de classe.</div></div>' +
+      '<button class="btn sm" onclick="novaFicha()">➕ Nova ficha</button></div>' +
+      '<div class="grid g4">' +
+        kpi(minhas.length, 'Minhas fichas') +
+        kpi(rascunhos, 'Rascunhos', rascunhos ? 'am' : '') +
+        kpi(enviadas + validadas, 'Enviadas / validadas', 'az') +
+        kpi(at, 'Estudantes em atenção', at ? 'vm' : '') +
+      '</div>' +
+      '<div class="grid g3" style="margin-top:16px">' +
+        kpi(pos, 'Destaques positivos') +
+        kpi(turmasTrabalhadas, 'Turmas atendidas', 'rx') +
+        kpi(recs.length, 'Comunicados recentes', 'az') +
+      '</div>' +
+    '</div>' +
+    '<div class="card pad0" style="margin-bottom:18px">' +
+      '<div class="card-head" style="padding:16px 20px 0"><h3 style="margin:0">Minhas fichas individuais</h3>' +
+      '<button class="btn tiny ghost" onclick="navegar(\'fichas\')">Ver todas</button></div>' +
+      '<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Turma</th><th>Componente</th><th>Data</th><th>Destaques</th><th>Atenção</th><th>Status</th><th>Ações</th></tr></thead>' +
+      '<tbody>' + linhas + '</tbody></table></div></div>' +
+    (recs.length ? '<div class="card"><div class="card-head"><h3>💬 Últimos comunicados</h3></div><div class="lista-reg">' +
+      recs.map(r => '<div class="recado"><h4>' + esc(r.titulo) + '</h4><div class="small">' + esc(r.texto) + '</div>' +
+      '<div class="mt">' + esc(r.autor) + ' • ' + fmtData(r.data) + '</div></div>').join('') + '</div></div>' : '');
 }
 
 function vPainelGestao(){
@@ -673,11 +882,16 @@ function vPainelGestao(){
 }
 function irPara(rota, param){
   ROTA = rota;
-  if(rota === 'fichas' && param) FILTRO_TURMA = param;
+  if(rota === 'fichas' && param){
+    FILTRO_TURMA = param;
+    const t = turma(param);
+    FILTRO_SERIE = t ? String(t.serie || '') : '';
+  }
   render();
   window.scrollTo(0,0);
 }
 let FILTRO_TURMA = '';
+let FILTRO_SERIE = '';
 
 function vPainelFamilia(){
   const idAluno = sessao.role === 'aluno' ? db.config.acessoAlunoId : db.config.acessoPaiAlunoId;
@@ -728,8 +942,9 @@ function vPainelFamilia(){
    FICHAS — LISTA
    ========================================================================= */
 function vFichas(){
-  let fs = db.fichas.slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  let fs = fichasVisiveis().slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
   if(FILTRO_TURMA) fs = fs.filter(f => f.turmaId === FILTRO_TURMA);
+  else if(FILTRO_SERIE) fs = fs.filter(f => { const t = turma(f.turmaId); return t && String(t.serie) === String(FILTRO_SERIE); });
   const busca = (window.__buscaFicha || '').toLowerCase();
   if(busca) fs = fs.filter(f => ((f.professor||'') + ' ' + (f.componente||'') + ' ' + turmaNome(f.turmaId)).toLowerCase().includes(busca));
 
@@ -751,15 +966,18 @@ function vFichas(){
     '</tr>').join('')
     : '<tr><td colspan="8"><div class="empty"><span class="ic">📝</span>Nenhuma ficha encontrada com os filtros atuais.</div></td></tr>';
 
-  return '<div class="card" style="margin-bottom:16px">' +
+  return (souProfessor() && !nomeProfessorSessao()
+      ? '<div class="erro" style="background:var(--azul-claro);color:var(--azul);border-left-color:var(--azul-2)">Você entrou sem informar o seu nome, por isso <b>todas</b> as fichas estão sendo exibidas. Saia do sistema e entre novamente preenchendo o campo "Nome do professor(a)" para ver apenas as suas fichas.</div>'
+      : '') +
+    '<div class="card" style="margin-bottom:16px">' +
       '<div class="grid g4">' +
-        '<div><label>Filtrar por turma</label><select class="input" onchange="FILTRO_TURMA=this.value;render()">' +
-          '<option value="">Todas as turmas</option>' + optsTurmas(FILTRO_TURMA) + '</select></div>' +
+        '<div><label>Série</label><select class="input" onchange="FILTRO_SERIE=this.value;FILTRO_TURMA=\'\';render()">' + optsSeries(FILTRO_SERIE, 'Todas as séries') + '</select></div>' +
+        '<div><label>Turma</label><select class="input" onchange="FILTRO_TURMA=this.value;render()">' + optsLetras(FILTRO_SERIE, FILTRO_TURMA, 'Todas as turmas') + '</select></div>' +
         '<div><label>Buscar</label><input class="input" id="busca-ficha" placeholder="Professor, componente..." value="' + esc(window.__buscaFicha||'') + '"></div>' +
         '<div style="display:flex;align-items:flex-end;gap:8px">' +
-          '<button class="btn ghost" onclick="FILTRO_TURMA=\'\';window.__buscaFicha=\'\';render()">Limpar</button>' +
+          '<button class="btn ghost" onclick="FILTRO_TURMA=\'\';FILTRO_SERIE=\'\';window.__buscaFicha=\'\';render()">Limpar</button>' +
+          '<button class="btn" onclick="novaFicha()">➕ Nova ficha</button>' +
         '</div>' +
-        '<div style="display:flex;align-items:flex-end"><button class="btn full" onclick="novaFicha()">➕ Nova ficha individual</button></div>' +
       '</div>' +
     '</div>' +
     '<div class="card pad0"><div class="tabela-wrap"><table class="tabela"><thead><tr>' +
@@ -808,9 +1026,8 @@ function vFichaForm(){
     '</div>' +
 
     '<div class="meta-grid">' +
-      '<div class="campo"><label>Classe</label><input class="input" name="classe" value="' + esc(g('classe')) + '" placeholder="Ex.: 6º Ano A"></div>' +
-      '<div class="campo"><label>Turma</label><select class="input" name="turmaId">' + optsTurmas(g('turmaId')) + '</select></div>' +
-      '<div class="campo"><label>Professor(a)</label><input class="input" name="professor" value="' + esc(g('professor')) + '" placeholder="Nome do professor"></div>' +
+      '<div class="campo"><label>Série e turma</label>' + seletorTurma(g('turmaId') || ((db.turmas[0]||{}).id || ''), '', 'turmaId') + '</div>' +
+      '<div class="campo"><label>Professor(a)</label><input class="input" name="professor" value="' + esc(g('professor') || nomeProfessorSessao()) + '" placeholder="Nome do professor"></div>' +
       '<div class="campo"><label>Componente curricular</label><input class="input" name="componente" value="' + esc(g('componente')) + '" placeholder="Ex.: Matemática"></div>' +
       '<div class="campo"><label>Data</label><input class="input" type="date" name="data" value="' + esc(g('data') || hoje()) + '"></div>' +
       '<div class="campo"><label>Status</label><select class="input" name="status">' +
@@ -888,7 +1105,7 @@ afterRender.ficha = function(){
       texto: l.querySelector('.txt').value.trim()
     })).filter(x => x.texto);
     const dados = {
-      turmaId: g('turmaId'), classe: g('classe'), professor: g('professor'),
+      turmaId: g('turmaId'), professor: g('professor'),
       componente: g('componente'), data: g('data') || hoje(), status: g('status') || 'rascunho',
       panorama: g('panorama'), participacao: g('participacao'), dificuldades: g('dificuldades'),
       frequencia: g('frequencia'), estrategias: g('estrategias'), observacoes: g('observacoes'),
@@ -951,12 +1168,11 @@ function fichaHTML(f, comAssinatura){
       '<div style="font-size:14pt;font-weight:bold;margin-top:8px;text-transform:uppercase">Ficha Individual — Pré-Conselho de Classe</div>' +
     '</div>' +
     '<table style="width:100%;font-size:10pt;margin-bottom:14px;border-collapse:collapse">' +
-      '<tr><td style="padding:3px 0"><b>Classe:</b> ' + esc(f.classe || turma_) + '</td>' +
-      '<td style="padding:3px 0"><b>Turma:</b> ' + esc(turma_) + '</td></tr>' +
-      '<tr><td style="padding:3px 0"><b>Professor(a):</b> ' + esc(f.professor || '—') + '</td>' +
-      '<td style="padding:3px 0"><b>Componente:</b> ' + esc(f.componente || '—') + '</td></tr>' +
-      '<tr><td style="padding:3px 0"><b>Data:</b> ' + fmtData(f.data) + '</td>' +
-      '<td style="padding:3px 0"><b>Status:</b> ' + esc(f.status || '—') + '</td></tr>' +
+      '<tr><td style="padding:3px 0"><b>Turma:</b> ' + esc(turma_) + '</td>' +
+      '<td style="padding:3px 0"><b>Professor(a):</b> ' + esc(f.professor || '—') + '</td></tr>' +
+      '<tr><td style="padding:3px 0"><b>Componente:</b> ' + esc(f.componente || '—') + '</td>' +
+      '<td style="padding:3px 0"><b>Data:</b> ' + fmtData(f.data) + '</td></tr>' +
+      '<tr><td style="padding:3px 0"><b>Status:</b> ' + esc(f.status || '—') + '</td><td></td></tr>' +
     '</table>' +
     '<div style="font-size:10pt">' +
       '<h3 style="font-size:11pt;border-bottom:1px solid #ccc;padding-bottom:3px">1. Panorama da turma</h3>' +
@@ -991,9 +1207,11 @@ function imprimirRelatorioGeral(){ printHTML(relatorioGeralHTML()); }
    CONSELHO DE CLASSE
    ========================================================================= */
 function vConselho(){
-  const lista = db.conselhos.slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
+  const podeGerir = !souProfessor();
+  const baseCons = souProfessor() ? db.conselhos : db.conselhos;
+  const lista = baseCons.slice().sort((a,b) => String(b.data).localeCompare(String(a.data)));
   const cards = lista.length ? lista.map(c => {
-    const fs = fichasDaTurma(c.turmaId);
+    const fs = fichasDaTurmaVisiveis(c.turmaId);
     const validadas = fs.filter(f => f.status === 'validada').length;
     const at = fs.reduce((s,f) => s + (f.atencao||[]).length, 0);
     return '<div class="card" style="margin-bottom:14px">' +
@@ -1001,7 +1219,7 @@ function vConselho(){
       '<div class="tiny-txt muted">' + esc(c.horario || '') + ' • ' + esc(c.local || '') + ' • ' + badgeStatus(c.status === 'realizado' ? 'validada' : 'enviada') + '</div></div>' +
       '<div class="acoes">' +
         '<button class="btn tiny ghost" onclick="imprimirConselho(\'' + c.id + '\')">🖨 Ata</button>' +
-        '<button class="btn tiny danger" onclick="excluirConselho(\'' + c.id + '\')">Excluir</button>' +
+        (podeGerir ? '<button class="btn tiny danger" onclick="excluirConselho(\'' + c.id + '\')">Excluir</button>' : '') +
       '</div></div>' +
       '<div class="grid g3" style="margin-bottom:12px">' +
         kpi(fs.length, 'Fichas da turma', 'az') + kpi(validadas, 'Validadas') + kpi(at, 'Casos de atenção', at ? 'vm' : '') +
@@ -1012,22 +1230,23 @@ function vConselho(){
     '</div>';
   }).join('') : '<div class="card"><div class="empty"><span class="ic">🏫</span>Nenhum conselho de classe registrado.<br><span class="small muted">Registre a reunião para consolidar as fichas da turma.</span></div></div>';
 
-  const validar = db.fichas.filter(f => f.status !== 'validada').length;
+  const validar = fichasVisiveis().filter(f => f.status !== 'validada').length;
 
   return '<div class="card" style="margin-bottom:18px"><div class="card-head">' +
       '<div><h2 style="margin:0">Conselho de Classe</h2>' +
       '<div class="small muted">Registre a ata, consolide as fichas e valide o pré-conselho de cada turma.</div></div>' +
-      '<div class="acoes">' +
+      (podeGerir ? '<div class="acoes">' +
         '<button class="btn sm ghost" onclick="validarTodas()">✅ Validar todas as fichas</button>' +
         '<button class="btn sm" onclick="novoConselho()">➕ Novo registro de conselho</button>' +
-      '</div></div>' +
+      '</div>' : '<span class="badge b-azul">Visão do professor</span>') +
+      '</div>' +
       (validar ? '<div class="erro" style="background:var(--amarelo-claro);color:var(--amarelo);border-left-color:var(--amarelo)">' + validar + ' ficha(s) ainda não validada(s).</div>' : '<div class="badge b-verde">Todas as fichas validadas</div>') +
     '</div>' + cards;
 }
 function novoConselho(){
   openModal('Novo registro de Conselho de Classe',
     '<div class="grid g2">' +
-      '<div><label>Turma</label><select class="input" id="mc-turma">' + optsTurmas('') + '</select></div>' +
+      '<div><label>Série e turma</label>' + seletorTurma((db.turmas[0]||{}).id || '', 'mc-turma', '', '') + '</div>' +
       '<div><label>Data</label><input class="input" type="date" id="mc-data" value="' + hoje() + '"></div>' +
       '<div><label>Horário</label><input class="input" id="mc-hora" placeholder="Ex.: 14:00"></div>' +
       '<div><label>Local</label><input class="input" id="mc-local" placeholder="Ex.: Sala dos Professores"></div>' +
@@ -1107,8 +1326,10 @@ function imprimirConselho(id){
    CADASTROS
    ========================================================================= */
 function vCadastros(){
-  const linhasT = db.turmas.map(t =>
-    '<tr><td><b>' + esc(t.nome) + '</b></td><td>' + esc(t.turno || '—') + '</td><td>' + esc(t.sala || '—') + '</td>' +
+  const linhasT = db.turmas.slice().sort((a,b) => (Number(a.serie)-Number(b.serie)) || String(a.letra).localeCompare(String(b.letra))).map(t =>
+    '<tr><td><b>' + esc(t.serie || '—') + 'º Ano</b></td>' +
+    '<td><span class="badge b-azul">Turma ' + esc(t.letra || '—') + '</span></td>' +
+    '<td>' + esc(t.turno || '—') + '</td><td>' + esc(t.sala || '—') + '</td>' +
     '<td>' + esc(t.prof || '—') + '</td><td>' + alunosDaTurma(t.id).length + '</td>' +
     '<td><div class="acoes"><button class="btn tiny ghost" onclick="editTurma(\'' + t.id + '\')">Editar</button>' +
     '<button class="btn tiny danger" onclick="delTurma(\'' + t.id + '\')">Excluir</button></div></td></tr>').join('');
@@ -1124,7 +1345,7 @@ function vCadastros(){
 
   return '<div class="card" style="margin-bottom:18px"><div class="card-head">' +
       '<h2 style="margin:0">Turmas</h2><button class="btn sm" onclick="editTurma()">➕ Nova turma</button></div>' +
-      '<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Turma</th><th>Turno</th><th>Sala</th><th>Professor(a) regente</th><th>Estudantes</th><th>Ações</th></tr></thead>' +
+      '<div class="tabela-wrap"><table class="tabela"><thead><tr><th>Série</th><th>Turma</th><th>Turno</th><th>Sala</th><th>Professor(a) regente</th><th>Estudantes</th><th>Ações</th></tr></thead>' +
       '<tbody>' + (linhasT || '<tr><td colspan="6" class="muted">Nenhuma turma cadastrada.</td></tr>') + '</tbody></table></div></div>' +
 
     '<div class="card"><div class="card-head"><h2 style="margin:0">Estudantes</h2>' +
@@ -1134,19 +1355,25 @@ function vCadastros(){
 }
 function editTurma(id){
   const t = id ? turma(id) : null;
+  const s0 = t ? String(t.serie || '') : '6';
+  const l0 = t ? String(t.letra || '') : 'A';
   openModal(t ? 'Editar turma' : 'Nova turma',
     '<div class="grid g2">' +
-      '<div><label>Nome da turma</label><input class="input" id="mt-nome" value="' + esc(t ? t.nome : '') + '" placeholder="Ex.: 9º Ano A"></div>' +
+      '<div><label>Série</label><select class="input" id="mt-serie" onchange="document.getElementById(\'mt-letra\').innerHTML=optsLetras(this.value,\'\')">' + optsSeries(s0) + '</select></div>' +
+      '<div><label>Turma</label><select class="input" id="mt-letra">' + optsLetras(s0, l0) + '</select></div>' +
       '<div><label>Turno</label><input class="input" id="mt-turno" value="' + esc(t ? t.turno : 'Tempo Integral') + '"></div>' +
       '<div><label>Sala</label><input class="input" id="mt-sala" value="' + esc(t ? t.sala : '') + '"></div>' +
-      '<div><label>Professor(a) regente</label><input class="input" id="mt-prof" value="' + esc(t ? t.prof : '') + '"></div>' +
+      '<div style="grid-column:1/-1"><label>Professor(a) regente</label><input class="input" id="mt-prof" value="' + esc(t ? t.prof : '') + '"></div>' +
     '</div>',
     function(){
-      const nome = $('#mt-nome').value.trim();
-      if(!nome){ toast('Informe o nome da turma.', true); return false; }
-      const dados = { nome:nome, turno:$('#mt-turno').value.trim(), sala:$('#mt-sala').value.trim(), prof:$('#mt-prof').value.trim() };
+      const serie = $('#mt-serie').value, letra = $('#mt-letra').value;
+      if(!serie || !letra){ toast('Escolha a série e a turma.', true); return false; }
+      const outra = acharTurma(serie, letra);
+      if(outra && (!t || outra.id !== t.id)){ toast('A turma ' + nomeTurmaDe(serie, letra) + ' já existe.', true); return false; }
+      const dados = { serie:serie, letra:letra, nome:nomeTurmaDe(serie, letra),
+                      turno:$('#mt-turno').value.trim(), sala:$('#mt-sala').value.trim(), prof:$('#mt-prof').value.trim() };
       if(t) Object.assign(t, dados); else db.turmas.push(Object.assign({ id: uid('t') }, dados));
-      save(); render(); toast('Turma salva.');
+      save(); render(); toast('Turma ' + nomeTurmaDe(serie, letra) + ' salva.');
     });
 }
 function delTurma(id){
@@ -1161,7 +1388,7 @@ function editAluno(id){
   openModal(a ? 'Editar estudante' : 'Novo estudante',
     '<div class="grid g2">' +
       '<div style="grid-column:1/-1"><label>Nome completo</label><input class="input" id="ma-nome" value="' + esc(a ? a.nome : '') + '"></div>' +
-      '<div><label>Turma</label><select class="input" id="ma-turma">' + optsTurmas(a ? a.turmaId : '') + '</select></div>' +
+      '<div><label>Série e turma</label>' + seletorTurma(a ? a.turmaId : ((db.turmas[0]||{}).id || ''), 'ma-turma', '', '') + '</div>' +
       '<div><label>Frequência (%)</label><input class="input" type="number" min="0" max="100" id="ma-freq" value="' + (a ? (a.freq||0) : 100) + '"></div>' +
       '<div><label>Responsável</label><input class="input" id="ma-resp" value="' + esc(a ? a.responsavel : '') + '"></div>' +
       '<div><label>Contato</label><input class="input" id="ma-cont" value="' + esc(a ? a.contato : '') + '"></div>' +
@@ -1189,12 +1416,14 @@ function delAluno(id){
    RELATÓRIOS
    ========================================================================= */
 function relatorioGeralHTML(){
-  const fs = db.fichas.slice().sort((a,b) => String(a.turmaId).localeCompare(String(b.turmaId)));
+  const fs = fichasVisiveis().slice().sort((a,b) => String(a.turmaId).localeCompare(String(b.turmaId)));
+  const titulo = souProfessor() ? 'Relatório do Professor — Pré-Conselho de Classe' : 'Relatório Geral do Pré-Conselho de Classe';
   return '<div style="font-family:Arial,sans-serif;padding:10px 6px;color:#111">' +
     '<div style="text-align:center;border-bottom:2px solid #1b4f72;padding-bottom:10px;margin-bottom:14px">' +
       '<div style="font-weight:bold;font-size:13pt;text-transform:uppercase">Escola Estadual do Campo Frei Graciano Droessler</div>' +
       '<div style="font-size:10pt;text-transform:uppercase">Ensino Fundamental em Tempo Integral</div>' +
-      '<div style="font-size:14pt;font-weight:bold;margin-top:8px">Relatório Geral do Pré-Conselho de Classe</div>' +
+      '<div style="font-size:14pt;font-weight:bold;margin-top:8px">' + esc(titulo) + '</div>' +
+      (souProfessor() ? '<div style="font-size:10pt">' + esc(sessao.nome) + '</div>' : '') +
       '<div style="font-size:10pt">Ano letivo ' + esc(db.config.anoLetivo) + ' — emitido em ' + fmtData(hoje()) + '</div>' +
     '</div>' +
     '<table style="width:100%;font-size:9pt;border-collapse:collapse" border="1" cellpadding="4">' +
@@ -1223,8 +1452,9 @@ function relatorioGeralHTML(){
   '</div>';
 }
 function vRelatorios(){
+  const base = fichasVisiveis();
   const porTurma = db.turmas.map(t => {
-    const as = alunosDaTurma(t.id), fs = fichasDaTurma(t.id);
+    const as = alunosDaTurma(t.id), fs = fichasDaTurmaVisiveis(t.id);
     const at = fs.reduce((s,f) => s + (f.atencao||[]).length, 0);
     const pos = fs.reduce((s,f) => s + (f.destaques||[]).length, 0);
     const media = as.length ? Math.round(as.reduce((s,a) => s + (Number(a.freq)||0), 0) / as.length) : 0;
@@ -1242,18 +1472,19 @@ function vRelatorios(){
   }).join('');
 
   const atencaoTodos = {};
-  db.fichas.forEach(f => (f.atencao||[]).forEach(x => {
+  base.forEach(f => (f.atencao||[]).forEach(x => {
     if(!atencaoTodos[x.alunoId]) atencaoTodos[x.alunoId] = [];
     atencaoTodos[x.alunoId].push({prof:f.professor, comp:f.componente, txt:x.texto, data:f.data});
   }));
   const idsAt = Object.keys(atencaoTodos);
 
   return '<div class="card" style="margin-bottom:18px"><div class="card-head">' +
-      '<div><h2 style="margin:0">Relatórios consolidados</h2><div class="small muted">Visão por turma e por estudante para subsidiar o conselho de classe.</div></div>' +
-      '<button class="btn sm" onclick="imprimirRelatorioGeral()">🖨 Imprimir relatório geral</button></div>' +
+      '<div><h2 style="margin:0">' + (souProfessor() ? 'Meus relatórios' : 'Relatórios consolidados') + '</h2>' +
+      '<div class="small muted">' + (souProfessor() ? 'Somente as fichas preenchidas por você.' : 'Visão por turma e por estudante para subsidiar o conselho de classe.') + '</div></div>' +
+      '<button class="btn sm" onclick="imprimirRelatorioGeral()">🖨 Imprimir relatório</button></div>' +
       '<div class="grid g4">' +
-        kpi(db.fichas.length, 'Fichas totais') +
-        kpi(db.turmas.length, 'Turmas', 'az') +
+        kpi(base.length, souProfessor() ? 'Minhas fichas' : 'Fichas totais') +
+        kpi(souProfessor() ? Object.keys(base.reduce((o,f) => (o[f.turmaId]=1, o), {})).length : db.turmas.length, 'Turmas', 'az') +
         kpi(db.alunos.length, 'Estudantes', 'rx') +
         kpi(idsAt.length, 'Estudantes em atenção', idsAt.length ? 'vm' : '') +
       '</div></div>' +
@@ -1496,9 +1727,9 @@ function exportarJSON(){
   toast('Backup exportado.');
 }
 function exportarCSV(){
-  const head = ['Turma','Classe','Professor(a)','Componente','Data','Status','Destaques','Atencao','Panorama','Dificuldades','Encaminhamentos','Sintese'];
+  const head = ['Turma','Professor(a)','Componente','Data','Status','Destaques','Atencao','Panorama','Dificuldades','Encaminhamentos','Sintese'];
   const rows = db.fichas.map(f => [
-    turmaNome(f.turmaId), f.classe||'', f.professor||'', f.componente||'', fmtData(f.data), f.status||'',
+    turmaNome(f.turmaId), f.professor||'', f.componente||'', fmtData(f.data), f.status||'',
     (f.destaques||[]).map(x => (aluno(x.alunoId)||{}).nome + ': ' + x.texto).join(' | '),
     (f.atencao||[]).map(x => (aluno(x.alunoId)||{}).nome + ': ' + x.texto).join(' | '),
     f.panorama||'', f.dificuldades||'', f.estrategias||'', f.sintese||''
